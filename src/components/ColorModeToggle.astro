@@ -1,0 +1,93 @@
+---
+import { COLOR_MODES } from '../utils/colorModes';
+---
+
+<div class="relative group" id="color-mode-container">
+  <button
+    id="color-mode-trigger"
+    class="p-2 rounded-lg hover:bg-surface/80 transition-all duration-300 group flex items-center gap-2"
+    aria-label="Toggle color mode"
+    aria-expanded="false"
+  >
+    <span class="text-lg group-hover:scale-110 transition-transform">🎨</span>
+    <span class="text-sm text-text-secondary">Reading Mode</span>
+  </button>
+
+  <div
+    id="color-mode-dropdown"
+    class="absolute right-0 top-full mt-2 z-50 bg-surface rounded-lg shadow-lg border border-accent-primary/20 backdrop-blur-sm transition-all duration-300 opacity-0 invisible"
+  >
+    <div class="p-2">
+      <div class="flex flex-col gap-1 min-w-[10rem]">
+        {Object.entries(COLOR_MODES).map(([mode, theme]) => (
+          <button
+            class="w-full px-3 py-2 text-sm flex items-center gap-2 rounded-md hover:bg-accent-primary/10 transition-colors"
+            data-mode={mode}
+            title={`Switch to ${theme.name} Mode`}
+          >
+            <span class="text-base">{theme.icon}</span>
+            <span class="text-text-secondary">{theme.name}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  import { COLOR_MODES, getStoredColorMode, setColorMode } from '../utils/colorModes';
+  import { setupDropdownBehavior } from '../utils/dropdownBehavior';
+  
+  const init = () => {
+    const container = document.getElementById('color-mode-container');
+    const trigger = document.getElementById('color-mode-trigger');
+    const dropdown = document.getElementById('color-mode-dropdown');
+    
+    if (!trigger || !dropdown) return;
+
+    // Setup dropdown behavior with auto-close after 3 seconds
+    setupDropdownBehavior(trigger, dropdown, 3000);
+    
+    // Handle color mode selection
+    dropdown.addEventListener('click', (e) => {
+      const button = (e.target as HTMLElement).closest('button');
+      if (!button) return;
+      
+      const mode = button.dataset.mode;
+      if (mode) {
+        setColorMode(mode as keyof typeof COLOR_MODES);
+        
+        const icon = button.querySelector('span')?.textContent;
+        if (icon) {
+          trigger.querySelector('span')!.textContent = icon;
+        }
+      }
+    });
+    
+    // Set initial icon based on stored mode
+    const currentMode = getStoredColorMode();
+    const theme = COLOR_MODES[currentMode];
+    if (theme) {
+      const iconSpan = trigger.querySelector('span');
+      if (iconSpan) {
+        iconSpan.textContent = theme.icon;
+      }
+    }
+  };
+  
+  // Initialize on DOM content loaded
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+</script>
+
+<style>
+  #color-mode-dropdown {
+    transform: translateY(-10px);
+    transition: opacity 0.3s ease-out,
+                visibility 0.3s ease-out,
+                transform 0.3s ease-out;
+  }
+</style>
